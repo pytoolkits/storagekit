@@ -33,7 +33,7 @@ class S3Storage(ObjectStorage):
 
     def list(self, **kwargs):
         try:
-            return self.client.list(Bucket=self.bucket, **kwargs)
+            return self.client.list_objects(Bucket=self.bucket, **kwargs)
         except Exception as e:
             return False
 
