@@ -50,9 +50,29 @@ class OSSStorage(ObjectStorage):
         except Exception as e:
             return False, e
 
+    def put(self, key, data):
+        return self.client.put_object(key, data)
+
+    def create_folder(self, key):
+        if not key.endswith('/'): key += '/'
+        return self.client.put_object(key, None)
+
     def list_buckets(self):
         service = oss2.Service(self.auth,self.endpoint)
-        return ([b.name for b in oss2.BucketIterator(service)])
+        return ([b.__dict__ for b in oss2.BucketIterator(service)])
+
+    def create_bucket(self, **kwargs):
+        return self.client.create_bucket()
+
+    def delete_bucket(self):
+        return self.client.delete_bucket()
+
+    def bucket_info(self):
+        return self.client.get_bucket_info()
+
+    # def create_bucket(self, name, **kwargs):
+    #     bucket = oss2.Bucket(self.auth,self.endpoint, name)
+    #     return bucket.create_bucket()
 
     @property
     def type(self):

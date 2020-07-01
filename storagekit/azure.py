@@ -52,9 +52,24 @@ class AzureStorage(ObjectStorage):
     def exists(self, path):
         return self.client.exists(self.container_name, path)
 
+    def put(self, key, data):
+        pass
+
+    def create_folder(self, key):
+        pass
+
     def list_buckets(self):
         response = self.client.list_containers()
         return ([c.name for c in response.items])
+
+    def create_bucket(self, **kwargs):
+        pass
+
+    def delete_bucket(self):
+        pass
+
+    def bucket_info(self):
+        pass
 
     @property
     def type(self):

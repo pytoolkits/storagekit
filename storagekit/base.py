@@ -25,6 +25,30 @@ class ObjectStorage(metaclass=abc.ABCMeta):
     def exists(self, path):
         pass
 
+    @abc.abstractmethod
+    def put(self, key, data):
+        pass
+
+    @abc.abstractmethod
+    def create_folder(self, key):
+        pass
+
+    @abc.abstractmethod
+    def list_buckets(self):
+        pass
+
+    @abc.abstractmethod
+    def create_bucket(self, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def delete_bucket(self):
+        pass
+
+    @abc.abstractmethod
+    def bucket_info(self):
+        pass
+
     def is_valid(self, src, target):
         ok, msg = self.upload(src=src, target=target)
         if not ok:

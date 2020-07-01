@@ -59,6 +59,12 @@ class S3Storage(ObjectStorage):
         except Exception as e:
             return False, e
 
+    def put(self, key, data):
+        return self.client.put_object(Bucket=self.bucket, Key=key, Body=data)
+
+    def create_folder(self, key):
+        return self.client.put_object(Bucket=self.bucket, Key=key, Body='')
+
     def generate_presigned_url(self, path, expire=3600):
         try:
             return self.client.generate_presigned_url(
@@ -72,8 +78,17 @@ class S3Storage(ObjectStorage):
     def list_buckets(self):
         response = self.client.list_buckets()
         buckets = response.get('Buckets', [])
-        result = [b['Name'] for b in buckets if b.get('Name')]
+        result = [b for b in buckets if b.get('Name')]
         return result
+
+    def create_bucket(self, **kwargs):
+        return self.client.create_bucket(Bucket=self.bucket)
+
+    def delete_bucket(self):
+        return self.client.delete_bucket(Bucket=self.bucket)
+
+    def bucket_info(self):
+        return self.client.head_bucket()
 
     @property
     def type(self):
