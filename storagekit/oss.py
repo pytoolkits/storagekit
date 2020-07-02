@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 import os
-
+import datetime
 import oss2
 
 from .base import ObjectStorage
@@ -59,7 +59,7 @@ class OSSStorage(ObjectStorage):
 
     def list_buckets(self):
         service = oss2.Service(self.auth,self.endpoint)
-        return ([{'name': b.name, 'create_time': b.creation_date, 'location': b.location} for b in oss2.BucketIterator(service)])
+        return ([{'name': b.name, 'create_time': datetime.datetime.fromtimestamp(b.creation_date), 'location': b.location} for b in oss2.BucketIterator(service)])
 
     def create_bucket(self, **kwargs):
         return self.client.create_bucket()
