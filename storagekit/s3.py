@@ -32,8 +32,23 @@ class S3Storage(ObjectStorage):
             return False, e
 
     def list(self, **kwargs):
+        data = []
+        if 'maxKeys' in kwargs: kwargs['MaxKeys'] = kwargs.pop('maxKeys')
+        if 'marker' in kwargs: kwargs['Marker'] = kwargs.pop('marker')
+        if 'prefix' in kwargs: kwargs['Prefix'] = kwargs.pop('prefix')
         try:
-            return self.client.list_objects(Bucket=self.bucket, **kwargs)
+            rets = self.client.list_objects(Bucket=self.bucket, **kwargs)
+            if 'Contents' not in rets: return []
+            for row in rets['Contents']:
+                d = {}
+                d['key'] = row['Key']
+                d['last_modified'] = row['LastModified']
+                d['etag'] = row['ETag']
+                d['size'] = row['Size']
+                d['tyep'] = ''
+                d['storage_class'] = row['StorageClass']
+                data.append(d)
+            return data
         except Exception as e:
             return False
 

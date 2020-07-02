@@ -30,7 +30,8 @@ class OSSStorage(ObjectStorage):
             return False, e
 
     def list(self, **kwargs):
-        return self.client.list_objects(**kwargs)
+        rets = self.client.list_objects(**kwargs)
+        return [row.__dict__ for row in rets.object_list]
 
     def exists(self, path):
         return self.client.object_exists(path)
