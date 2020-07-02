@@ -78,7 +78,7 @@ class S3Storage(ObjectStorage):
     def list_buckets(self):
         response = self.client.list_buckets()
         buckets = response.get('Buckets', [])
-        result = [b for b in buckets if b.get('Name')]
+        result = [{'name': b['Name'], 'create_time': b['CreationDate'].strftime('%Y-%m-%d %H:%M')} for b in buckets if b.get('Name')]
         return result
 
     def create_bucket(self, **kwargs):
