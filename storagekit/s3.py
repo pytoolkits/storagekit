@@ -99,14 +99,14 @@ class S3Storage(ObjectStorage):
         result = [{'name': b['Name'], 'create_time': b['CreationDate']} for b in buckets if b.get('Name')]
         return result
 
-    def create_bucket(self, **kwargs):
-        return self.client.create_bucket(Bucket=self.bucket)
+    def create_bucket(self, bucket=self.bucket, **kwargs):
+        return self.client.create_bucket(Bucket=bucket, **kwargs)
 
-    def delete_bucket(self):
-        return self.client.delete_bucket(Bucket=self.bucket)
+    def delete_bucket(self, bucket=self.bucket):
+        return self.client.delete_bucket(Bucket=bucket)
 
-    def bucket_info(self):
-        return self.client.head_bucket()
+    def bucket_info(self, bucket=self.bucket):
+        return self.client.head_bucket(Bucket=bucket)
 
     @property
     def type(self):

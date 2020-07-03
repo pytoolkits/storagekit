@@ -69,18 +69,14 @@ class OSSStorage(ObjectStorage):
         service = oss2.Service(self.auth,self.endpoint)
         return ([{'name': b.name, 'create_time': datetime.datetime.fromtimestamp(b.creation_date), 'location': b.location} for b in oss2.BucketIterator(service)])
 
-    def create_bucket(self, **kwargs):
-        return self.client.create_bucket()
+    def create_bucket(self, bucket=self.bucket, **kwargs):
+        return oss2.Bucket(self.auth, self.endpoint, bucket).create_bucket(**kwargs)
 
-    def delete_bucket(self):
-        return self.client.delete_bucket()
+    def delete_bucket(self, bucket=self.bucket):
+        return oss2.Bucket(self.auth, self.endpoint, bucket).delete_bucket()
 
-    def bucket_info(self):
-        return self.client.get_bucket_info()
-
-    # def create_bucket(self, name, **kwargs):
-    #     bucket = oss2.Bucket(self.auth,self.endpoint, name)
-    #     return bucket.create_bucket()
+    def bucket_info(self, bucket=self.bucket):
+        return oss2.Bucket(self.auth, self.endpoint, bucket).get_bucket_info()
 
     @property
     def type(self):
