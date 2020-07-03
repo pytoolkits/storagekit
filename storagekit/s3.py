@@ -36,9 +36,12 @@ class S3Storage(ObjectStorage):
         if 'max_keys' in kwargs: kwargs['MaxKeys'] = kwargs.pop('max_keys')
         if 'marker' in kwargs: kwargs['Marker'] = kwargs.pop('marker')
         if 'prefix' in kwargs: kwargs['Prefix'] = kwargs.pop('prefix')
+        if 'delimiter' in kwargs: kwargs['Delimiter'] = kwargs.pop('delimiter')
         try:
             rets = self.client.list_objects(Bucket=self.bucket, **kwargs)
-            if 'Contents' not in rets: return []
+            if 'CommonPrefixes' in rets:
+                data = [{'key': row['Prefix']} for row in rets['CommonPrefixes']]
+            if 'Contents' not in rets: return data
             for row in rets['Contents']:
                 d = {}
                 d['key'] = row['Key']

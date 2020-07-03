@@ -32,6 +32,8 @@ class OSSStorage(ObjectStorage):
     def list(self, **kwargs):
         rets = self.client.list_objects(**kwargs)
         data = []
+        if rets.prefix_list:
+            data = [{'key': row} for row in rets.prefix_list]
         for row in rets.object_list:
             d = row.__dict__
             d['last_modified'] = datetime.datetime.fromtimestamp(d['last_modified'])
