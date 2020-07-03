@@ -33,7 +33,7 @@ class S3Storage(ObjectStorage):
 
     def list(self, **kwargs):
         data = []
-        if 'maxKeys' in kwargs: kwargs['MaxKeys'] = kwargs.pop('maxKeys')
+        if 'max_keys' in kwargs: kwargs['MaxKeys'] = kwargs.pop('max_keys')
         if 'marker' in kwargs: kwargs['Marker'] = kwargs.pop('marker')
         if 'prefix' in kwargs: kwargs['Prefix'] = kwargs.pop('prefix')
         try:

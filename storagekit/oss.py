@@ -31,7 +31,12 @@ class OSSStorage(ObjectStorage):
 
     def list(self, **kwargs):
         rets = self.client.list_objects(**kwargs)
-        return [row.__dict__ for row in rets.object_list]
+        data = []
+        for row in rets.object_list:
+            d = row.__dict__
+            d['last_modified'] = datetime.datetime.fromtimestamp(d['last_modified'])
+            data.append(d)
+        return data
 
     def exists(self, path):
         return self.client.object_exists(path)
