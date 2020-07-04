@@ -24,14 +24,7 @@ class S3Storage(ObjectStorage):
         except ValueError:
             pass
 
-    def upload(self, src, target):
-        try:
-            self.client.upload_file(Filename=src, Bucket=self.bucket, Key=target)
-            return True, None
-        except Exception as e:
-            return False, e
-
-    def list(self, **kwargs):
+    def list_objects(self, **kwargs):
         data = []
         if 'max_keys' in kwargs: kwargs['MaxKeys'] = kwargs.pop('max_keys')
         if 'marker' in kwargs: kwargs['Marker'] = kwargs.pop('marker')
@@ -55,14 +48,37 @@ class S3Storage(ObjectStorage):
         except Exception as e:
             return False
 
-    def exists(self, path):
+    def exists_object(self, key):
         try:
-            self.client.head_object(Bucket=self.bucket, Key=path)
+            self.client.head_object(Bucket=self.bucket, Key=key)
             return True, None
         except Exception as e:
             return False, e
 
-    def download(self, src, target):
+    def put_object(self, key, data):
+        return self.client.put_object(Bucket=self.bucket, Key=key, Body=data)
+
+    def get_object(self, key, **kwargs):
+        return self.client.get_object(Bucket=self.bucket, Key=key, **kwargs)
+
+    def delete_object(self, key):
+        try:
+            self.client.delete_object(Bucket=self.bucket, Key=key)
+            return True, None
+        except Exception as e:
+            return False, e
+
+    def create_folder(self, key):
+        return self.client.put_object(Bucket=self.bucket, Key=key, Body='')
+
+    def upload_file(self, src, target):
+        try:
+            self.client.upload_file(Filename=src, Bucket=self.bucket, Key=target)
+            return True, None
+        except Exception as e:
+            return False, e
+
+    def download_file(self, src, target):
         try:
             os.makedirs(os.path.dirname(target), 0o755, exist_ok=True)
             self.client.download_file(self.bucket, src, target)
@@ -70,30 +86,17 @@ class S3Storage(ObjectStorage):
         except Exception as e:
             return False, e
 
-    def delete(self, path):
-        try:
-            self.client.delete_object(Bucket=self.bucket, Key=path)
-            return True, None
-        except Exception as e:
-            return False, e
-
-    def put(self, key, data):
-        return self.client.put_object(Bucket=self.bucket, Key=key, Body=data)
-
-    def create_folder(self, key):
-        return self.client.put_object(Bucket=self.bucket, Key=key, Body='')
-
-    def generate_presigned_url(self, path, expire=3600):
+    def generate_presigned_url(self, key, expire=3600):
         try:
             return self.client.generate_presigned_url(
                 ClientMethod='get_object',
-                Params={'Bucket': self.bucket, 'Key': path},
+                Params={'Bucket': self.bucket, 'Key': key},
                 ExpiresIn=expire,
                 HttpMethod='GET'), None
         except Exception as e:
             return False, e
 
-    def list_buckets(self):
+    def list_buckets(self, **kwargs):
         response = self.client.list_buckets()
         buckets = response.get('Buckets', [])
         result = [{'name': b['Name'], 'create_time': b['CreationDate']} for b in buckets if b.get('Name')]
@@ -107,7 +110,7 @@ class S3Storage(ObjectStorage):
         if not bucket: bucket = self.bucket
         return self.client.delete_bucket(Bucket=bucket)
 
-    def bucket_info(self, bucket=None):
+    def get_bucket(self, bucket=None):
         if not bucket: bucket = self.bucket
         return self.client.head_bucket(Bucket=bucket)
 

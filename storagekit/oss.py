@@ -22,14 +22,7 @@ class OSSStorage(ObjectStorage):
         else:
             self.client = None
 
-    def upload(self, src, target):
-        try:
-            self.client.put_object_from_file(target, src)
-            return True, None
-        except Exception as e:
-            return False, e
-
-    def list(self, **kwargs):
+    def list_objects(self, **kwargs):
         rets = self.client.list_objects(**kwargs)
         data = []
         if rets.prefix_list:
@@ -40,17 +33,34 @@ class OSSStorage(ObjectStorage):
             data.append(d)
         return data
 
-    def exists(self, path):
-        return self.client.object_exists(path)
+    def exists_object(self, key):
+        return self.client.object_exists(key)
 
-    def delete(self, path):
+    def get_object(self, key, **kwargs):
+        return self.client.get_object(key, **kwargs)
+
+    def put_object(self, key, data):
+        return self.client.put_object(key, data)
+
+    def delete_object(self, key):
         try:
-            self.client.delete_object(path)
+            self.client.delete_object(key)
             return True, None
         except Exception as e:
             return False, e
 
-    def download(self, src, target):
+    def create_folder(self, key):
+        if not key.endswith('/'): key += '/'
+        return self.client.put_object(key, None)
+
+    def upload_file(self, src, target):
+        try:
+            self.client.put_object_from_file(target, src)
+            return True, None
+        except Exception as e:
+            return False, e
+
+    def download_file(self, src, target):
         try:
             os.makedirs(os.path.dirname(target), 0o755, exist_ok=True)
             self.client.get_object_to_file(src, target)
@@ -58,14 +68,7 @@ class OSSStorage(ObjectStorage):
         except Exception as e:
             return False, e
 
-    def put(self, key, data):
-        return self.client.put_object(key, data)
-
-    def create_folder(self, key):
-        if not key.endswith('/'): key += '/'
-        return self.client.put_object(key, None)
-
-    def list_buckets(self):
+    def list_buckets(self, **kwargs):
         service = oss2.Service(self.auth,self.endpoint)
         return ([{'name': b.name, 'create_time': datetime.datetime.fromtimestamp(b.creation_date), 'location': b.location} for b in oss2.BucketIterator(service)])
 
@@ -77,7 +80,7 @@ class OSSStorage(ObjectStorage):
         if not bucket: bucket = self.bucket
         return oss2.Bucket(self.auth, self.endpoint, bucket).delete_bucket()
 
-    def bucket_info(self, bucket=None):
+    def get_bucket(self, bucket=None):
         if not bucket: bucket = self.bucket
         return oss2.Bucket(self.auth, self.endpoint, bucket).get_bucket_info()
 

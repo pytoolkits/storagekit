@@ -5,28 +5,25 @@ import abc
 
 
 class ObjectStorage(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def upload(self, src, target):
-        return None, None
 
     @abc.abstractmethod
-    def download(self, src, target):
+    def list_objects(self, **kwargs):
         pass
 
     @abc.abstractmethod
-    def delete(self, path):
+    def delete_object(self, key):
         pass
 
     @abc.abstractmethod
-    def list(self, **kwargs):
+    def exists_object(self, key):
         pass
 
     @abc.abstractmethod
-    def exists(self, path):
+    def put_object(self, key, data):
         pass
 
     @abc.abstractmethod
-    def put(self, key, data):
+    def get_object(self, key, **kwargs):
         pass
 
     @abc.abstractmethod
@@ -34,19 +31,27 @@ class ObjectStorage(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def upload_file(self, src, target):
+        return None, None
+
+    @abc.abstractmethod
+    def download_file(self, src, target):
+        pass
+
+    @abc.abstractmethod
     def list_buckets(self):
         pass
 
     @abc.abstractmethod
-    def create_bucket(self, **kwargs):
+    def create_bucket(self, bucket, **kwargs):
         pass
 
     @abc.abstractmethod
-    def delete_bucket(self):
+    def delete_bucket(self, bucket):
         pass
 
     @abc.abstractmethod
-    def bucket_info(self):
+    def get_bucket(self, bucket):
         pass
 
     def is_valid(self, src, target):
