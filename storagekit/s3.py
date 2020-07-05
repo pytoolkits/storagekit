@@ -69,6 +69,7 @@ class S3Storage(ObjectStorage):
             return False, e
 
     def create_folder(self, key):
+        if not key.endswith('/'): key += '/'
         return self.client.put_object(Bucket=self.bucket, Key=key, Body='')
 
     def upload_file(self, src, target):
