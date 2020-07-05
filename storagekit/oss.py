@@ -49,9 +49,22 @@ class OSSStorage(ObjectStorage):
         except Exception as e:
             return False, e
 
+    def delete_objects(self, key_list):
+        try:
+            self.client.batch_delete_objects(key_list)
+            return True, None
+        except Exception as e:
+            return False, e
+
     def create_folder(self, key):
         if not key.endswith('/'): key += '/'
         return self.client.put_object(key, None)
+
+    def delete_folder(self, key):
+        if not key.endswith('/'): key += '/'
+        objects = oss2.ObjectIterator(self.client, prefix=key)
+        key_list = [row.key for row in objects]
+        return self.delete_objects(key_list)
 
     def upload_file(self, src, target):
         try:

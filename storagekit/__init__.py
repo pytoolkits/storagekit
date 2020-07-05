@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-__version__ = '0.0.13'
+__version__ = '0.0.14'
 
 from .oss import OSSStorage
 from .s3 import S3Storage

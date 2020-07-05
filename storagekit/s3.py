@@ -8,7 +8,7 @@ from .base import ObjectStorage
 
 class S3Storage(ObjectStorage):
     def __init__(self, config):
-        self.bucket = config.get("BUCKET", "jumpserver")
+        self.bucket = config.get("BUCKET", None)
         self.region = config.get("REGION", None)
         self.access_key = config.get("ACCESS_KEY", None)
         self.secret_key = config.get("SECRET_KEY", None)
@@ -68,9 +68,25 @@ class S3Storage(ObjectStorage):
         except Exception as e:
             return False, e
 
+    def delete_objects(self, key_list):
+        try:
+            self.client.delete_objects(Bucket=self.bucket, Key=key)
+            return True, None
+        except Exception as e:
+            return False, e
+
     def create_folder(self, key):
         if not key.endswith('/'): key += '/'
         return self.client.put_object(Bucket=self.bucket, Key=key, Body='')
+
+    def delete_folder(self, key):
+        if not key.endswith('/'): key += '/'
+        s3 = boto3.resource('s3',
+                            aws_access_key_id=self.access_key,
+                            aws_secret_access_key=self.secret_key,
+                            endpoint_url=self.endpoint)
+        bucket = s3.Bucket(self.bucket)
+        return bucket.objects.filter(Prefix=key).delete()
 
     def upload_file(self, src, target):
         try:

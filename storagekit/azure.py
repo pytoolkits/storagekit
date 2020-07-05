@@ -47,6 +47,10 @@ class AzureStorage(ObjectStorage):
         if not key.endswith('/'): key += '/'
         pass
 
+    def delete_folder(self, key):
+        if not key.endswith('/'): key += '/'
+        pass
+
     def upload_file(self, src, target):
         try:
             self.client.create_blob_from_path(self.container_name, target, src)

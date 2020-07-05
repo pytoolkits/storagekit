@@ -15,6 +15,10 @@ class ObjectStorage(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def delete_objects(self, key_list):
+        pass
+
+    @abc.abstractmethod
     def exists_object(self, key):
         pass
 
@@ -28,6 +32,10 @@ class ObjectStorage(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_folder(self, key):
+        pass
+
+    @abc.abstractmethod
+    def delete_folder(self, key):
         pass
 
     @abc.abstractmethod
