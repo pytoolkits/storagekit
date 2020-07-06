@@ -35,16 +35,16 @@ class S3Storage(ObjectStorage):
             rets = self.client.list_objects(Bucket=self.bucket, **kwargs)
             if 'CommonPrefixes' in rets:
                 data = [{'key': row['Prefix']} for row in rets['CommonPrefixes']]
-            if 'Contents' not in rets: return data
-            for row in rets['Contents']:
-                d = {}
-                d['key'] = row['Key']
-                d['last_modified'] = row['LastModified']
-                d['etag'] = row['ETag']
-                d['size'] = row['Size']
-                d['tyep'] = ''
-                d['storage_class'] = row['StorageClass']
-                data.append(d)
+            if 'Contents' in rets:
+                for row in rets['Contents']:
+                    d = {}
+                    d['key'] = row['Key']
+                    d['last_modified'] = row['LastModified']
+                    d['etag'] = row['ETag']
+                    d['size'] = row['Size']
+                    d['tyep'] = ''
+                    d['storage_class'] = row['StorageClass']
+                    data.append(d)
             resp['data'] = data
         except Exception as e:
             resp = {'status': 'failure', 'errmsg': str(e)}
