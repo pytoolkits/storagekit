@@ -72,6 +72,7 @@ class S3Storage(ObjectStorage):
             data = self.client.get_object(Bucket=self.bucket, Key=key, **kwargs)
             resp['data'] = data
             resp['data']['body'] = data['Body'].read()
+            resp['data']['content_type'] = data['ResponseMetadata']['HTTPHeaders']['content-type']
         except Exception as e:
             resp = {'status': 'failure', 'errmsg': str(e)}
         return resp
