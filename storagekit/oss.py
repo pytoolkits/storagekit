@@ -50,7 +50,7 @@ class OSSStorage(ObjectStorage):
         resp = {'status': 'success', 'errmsg': ''}
         try:
             data = self.client.get_object(key, **kwargs)
-            resp['data'] = data
+            resp['data'] = data.__dict__
             resp['data']['body'] = data.read()
         except Exception as e:
             resp = {'status': 'failure', 'errmsg': str(e)}
