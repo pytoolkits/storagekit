@@ -25,7 +25,7 @@ class S3Storage(ObjectStorage):
             pass
 
     def list_objects(self, **kwargs):
-        resp = {'status': 'success', 'errmsg': ''}
+        resp = {'status': 'success', 'errmsg': '', 'data': []}
         data = []
         if 'max_keys' in kwargs: kwargs['MaxKeys'] = kwargs.pop('max_keys')
         if 'marker' in kwargs: kwargs['Marker'] = kwargs.pop('marker')
@@ -69,15 +69,9 @@ class S3Storage(ObjectStorage):
     def get_object(self, key, **kwargs):
         resp = {'status': 'success', 'errmsg': ''}
         try:
-            ret = self.client.get_object(Bucket=self.bucket, Key=key, **kwargs)
-            resp['data'] = {
-                'key': key,
-                d['last_modified']: ret['LastModified'],
-                d['etag'] :  ret['ETag'],
-                d['size'] : ret['Size'],
-                d['type'] : '',
-                d['storage_class'] : ret['StorageClass'],
-            }
+            data = self.client.get_object(Bucket=self.bucket, Key=key, **kwargs)
+            resp['data'] = data
+            resp['data']['body'] = data['Body'].read()
         except Exception as e:
             resp = {'status': 'failure', 'errmsg': str(e)}
         return resp
@@ -150,7 +144,7 @@ class S3Storage(ObjectStorage):
             return False, e
 
     def list_buckets(self, **kwargs):
-        resp = {'status': 'success', 'errmsg': ''}
+        resp = {'status': 'success', 'errmsg': '', 'data': []}
         try:
             response = self.client.list_buckets()
             buckets = response.get('Buckets', [])

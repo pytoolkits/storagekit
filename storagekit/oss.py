@@ -23,7 +23,7 @@ class OSSStorage(ObjectStorage):
             self.client = None
 
     def list_objects(self, **kwargs):
-        resp = {'status': 'success', 'errmsg': ''}
+        resp = {'status': 'success', 'errmsg': '', 'data': []}
         try:
             rets = self.client.list_objects(**kwargs)
             data = []
@@ -45,18 +45,13 @@ class OSSStorage(ObjectStorage):
         except Exception as e:
             resp = {'status': 'failure', 'errmsg': str(e)}
         return resp
-        return self.client.object_exists(key)
 
     def get_object(self, key, **kwargs):
         resp = {'status': 'success', 'errmsg': ''}
         try:
-            ret = self.client.get_object(key, **kwargs)
-            resp['data'] = {
-                'key': key,
-                'last_modified': ret.last_modified,
-                'size': ret.content_length,
-                'etag': ret.etag,
-            }
+            data = self.client.get_object(key, **kwargs)
+            resp['data'] = data
+            resp['data']['body'] = data.read()
         except Exception as e:
             resp = {'status': 'failure', 'errmsg': str(e)}
         return resp
@@ -124,7 +119,7 @@ class OSSStorage(ObjectStorage):
         return resp
 
     def list_buckets(self, **kwargs):
-        resp = {'status': 'success', 'errmsg': ''}
+        resp = {'status': 'success', 'errmsg': '', 'data': []}
         try:
             service = oss2.Service(self.auth,self.endpoint)
             resp['data'] = ([{'name': b.name, 'create_time': datetime.datetime.fromtimestamp(b.creation_date), 'location': b.location} for b in oss2.BucketIterator(service)])
