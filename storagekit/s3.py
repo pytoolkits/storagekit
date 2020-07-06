@@ -69,8 +69,9 @@ class S3Storage(ObjectStorage):
             return False, e
 
     def delete_objects(self, key_list):
+        objects = [{'Key': row} for row in key_list]
         try:
-            self.client.delete_objects(Bucket=self.bucket, Key=key)
+            self.client.delete_objects(Bucket=self.bucket, Delete={'Objects':objects})
             return True, None
         except Exception as e:
             return False, e
