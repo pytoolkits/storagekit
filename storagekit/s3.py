@@ -25,6 +25,7 @@ class S3Storage(ObjectStorage):
             pass
 
     def list_objects(self, **kwargs):
+        resp = {'status': 'success', 'errmsg': ''}
         data = []
         if 'max_keys' in kwargs: kwargs['MaxKeys'] = kwargs.pop('max_keys')
         if 'marker' in kwargs: kwargs['Marker'] = kwargs.pop('marker')
@@ -44,65 +45,99 @@ class S3Storage(ObjectStorage):
                 d['tyep'] = ''
                 d['storage_class'] = row['StorageClass']
                 data.append(d)
-            return data
+            resp['data'] = data
         except Exception as e:
-            return False
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def exists_object(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             self.client.head_object(Bucket=self.bucket, Key=key)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def put_object(self, key, data):
-        return self.client.put_object(Bucket=self.bucket, Key=key, Body=data)
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            self.client.put_object(Bucket=self.bucket, Key=key, Body=data)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def get_object(self, key, **kwargs):
-        return self.client.get_object(Bucket=self.bucket, Key=key, **kwargs)
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            ret = self.client.get_object(Bucket=self.bucket, Key=key, **kwargs)
+            resp['data'] = {
+                'key': key,
+                d['last_modified']: ret['LastModified'],
+                d['etag'] :  ret['ETag'],
+                d['size'] : ret['Size'],
+                d['type'] : '',
+                d['storage_class'] : ret['StorageClass'],
+            }
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_object(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             self.client.delete_object(Bucket=self.bucket, Key=key)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_objects(self, key_list):
+        resp = {'status': 'success', 'errmsg': ''}
         objects = [{'Key': row} for row in key_list]
         try:
             self.client.delete_objects(Bucket=self.bucket, Delete={'Objects':objects})
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def create_folder(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
         if not key.endswith('/'): key += '/'
-        return self.client.put_object(Bucket=self.bucket, Key=key, Body='')
+        try:
+            self.client.put_object(Bucket=self.bucket, Key=key, Body='')
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_folder(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
         if not key.endswith('/'): key += '/'
-        s3 = boto3.resource('s3',
+        try:
+            s3 = boto3.resource('s3',
                             aws_access_key_id=self.access_key,
                             aws_secret_access_key=self.secret_key,
                             endpoint_url=self.endpoint)
-        bucket = s3.Bucket(self.bucket)
-        return bucket.objects.filter(Prefix=key).delete()
+            bucket = s3.Bucket(self.bucket)
+            bucket.objects.filter(Prefix=key).delete()
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def upload_file(self, src, target):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             self.client.upload_file(Filename=src, Bucket=self.bucket, Key=target)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def download_file(self, src, target):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             os.makedirs(os.path.dirname(target), 0o755, exist_ok=True)
             self.client.download_file(self.bucket, src, target)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def generate_presigned_url(self, key, expire=3600):
         try:
@@ -115,22 +150,41 @@ class S3Storage(ObjectStorage):
             return False, e
 
     def list_buckets(self, **kwargs):
-        response = self.client.list_buckets()
-        buckets = response.get('Buckets', [])
-        result = [{'name': b['Name'], 'create_time': b['CreationDate']} for b in buckets if b.get('Name')]
-        return result
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            response = self.client.list_buckets()
+            buckets = response.get('Buckets', [])
+            resp['data'] = [{'name': b['Name'], 'create_time': b['CreationDate']} for b in buckets if b.get('Name')]
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def create_bucket(self, bucket=None, **kwargs):
+        resp = {'status': 'success', 'errmsg': ''}
         if not bucket: bucket = self.bucket
-        return self.client.create_bucket(Bucket=bucket, **kwargs)
+        try:
+            self.client.create_bucket(Bucket=bucket, **kwargs)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_bucket(self, bucket=None):
+        resp = {'status': 'success', 'errmsg': ''}
         if not bucket: bucket = self.bucket
-        return self.client.delete_bucket(Bucket=bucket)
+        try:
+            self.client.delete_bucket(Bucket=bucket)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def get_bucket(self, bucket=None):
+        resp = {'status': 'success', 'errmsg': ''}
         if not bucket: bucket = self.bucket
-        return self.client.head_bucket(Bucket=bucket)
+        try:
+            resp['data'] = self.client.head_bucket(Bucket=bucket)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     @property
     def type(self):

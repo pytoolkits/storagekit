@@ -23,79 +23,141 @@ class OSSStorage(ObjectStorage):
             self.client = None
 
     def list_objects(self, **kwargs):
-        rets = self.client.list_objects(**kwargs)
-        data = []
-        if rets.prefix_list:
-            data = [{'key': row} for row in rets.prefix_list]
-        for row in rets.object_list:
-            d = row.__dict__
-            d['last_modified'] = datetime.datetime.fromtimestamp(d['last_modified'])
-            data.append(d)
-        return data
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            rets = self.client.list_objects(**kwargs)
+            data = []
+            if rets.prefix_list:
+                data = [{'key': row} for row in rets.prefix_list]
+            for row in rets.object_list:
+                d = row.__dict__
+                d['last_modified'] = datetime.datetime.fromtimestamp(d['last_modified'])
+                data.append(d)
+            resp['data'] = data
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def exists_object(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            self.client.object_exists(key)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
         return self.client.object_exists(key)
 
     def get_object(self, key, **kwargs):
-        return self.client.get_object(key, **kwargs)
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            ret = self.client.get_object(key, **kwargs)
+            resp['data'] = {
+                'key': key,
+                'last_modified': ret.last_modified,
+                'size': ret.content_length,
+                'etag': ret.etag,
+            }
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
+
 
     def put_object(self, key, data):
-        return self.client.put_object(key, data)
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            self.client.put_object(key, data)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_object(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             self.client.delete_object(key)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_objects(self, key_list):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             self.client.batch_delete_objects(key_list)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def create_folder(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
         if not key.endswith('/'): key += '/'
-        return self.client.put_object(key, None)
+        try:
+            self.client.put_object(key, '')
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_folder(self, key):
+        resp = {'status': 'success', 'errmsg': ''}
         if not key.endswith('/'): key += '/'
-        objects = oss2.ObjectIterator(self.client, prefix=key)
-        key_list = [row.key for row in objects]
-        return self.delete_objects(key_list)
+        try:
+            objects = oss2.ObjectIterator(self.client, prefix=key)
+            key_list = [row.key for row in objects]
+            self.delete_objects(key_list)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def upload_file(self, src, target):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             self.client.put_object_from_file(target, src)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def download_file(self, src, target):
+        resp = {'status': 'success', 'errmsg': ''}
         try:
             os.makedirs(os.path.dirname(target), 0o755, exist_ok=True)
             self.client.get_object_to_file(src, target)
-            return True, None
         except Exception as e:
-            return False, e
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def list_buckets(self, **kwargs):
-        service = oss2.Service(self.auth,self.endpoint)
-        return ([{'name': b.name, 'create_time': datetime.datetime.fromtimestamp(b.creation_date), 'location': b.location} for b in oss2.BucketIterator(service)])
+        resp = {'status': 'success', 'errmsg': ''}
+        try:
+            service = oss2.Service(self.auth,self.endpoint)
+            resp['data'] = ([{'name': b.name, 'create_time': datetime.datetime.fromtimestamp(b.creation_date), 'location': b.location} for b in oss2.BucketIterator(service)])
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def create_bucket(self, bucket=None, **kwargs):
+        resp = {'status': 'success', 'errmsg': ''}
         if not bucket: bucket = self.bucket
-        return oss2.Bucket(self.auth, self.endpoint, bucket).create_bucket(**kwargs)
+        try:
+            oss2.Bucket(self.auth, self.endpoint, bucket).create_bucket(**kwargs)
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def delete_bucket(self, bucket=None):
+        resp = {'status': 'success', 'errmsg': ''}
         if not bucket: bucket = self.bucket
-        return oss2.Bucket(self.auth, self.endpoint, bucket).delete_bucket()
+        try:
+            oss2.Bucket(self.auth, self.endpoint, bucket).delete_bucket()
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     def get_bucket(self, bucket=None):
+        resp = {'status': 'success', 'errmsg': ''}
         if not bucket: bucket = self.bucket
-        return oss2.Bucket(self.auth, self.endpoint, bucket).get_bucket_info()
+        try:
+            resp['data'] = oss2.Bucket(self.auth, self.endpoint, bucket).get_bucket_info()
+        except Exception as e:
+            resp = {'status': 'failure', 'errmsg': str(e)}
+        return resp
 
     @property
     def type(self):
